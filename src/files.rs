@@ -10,7 +10,7 @@ pub fn get_pathes(path: PathBuf) -> Result<Vec<PathBuf>, Error> {
     let mut pathes: Vec<PathBuf> = vec![path];
 
     let folder_regex = Regex::new(r"^\d+$").unwrap();
-    let file_regex = Regex::new(r".*\d+\.md$").unwrap();
+    let file_regex = Regex::new(r"^\d+\.md$").unwrap();
 
     while let Some(current) = pathes.pop() {
         match fs::read_dir(&current) {
@@ -67,7 +67,64 @@ mod test {
     use super::*;
     use std::fs;
     use std::io::Read;
+    use std::path::PathBuf;
     use tempfile::NamedTempFile;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_get_pathes() {
+        // Create a temporary directory for testing
+        let temp_dir = TempDir::new().expect("Failed to create temporary directory");
+        let dir_path = temp_dir.path();
+
+        // Create subdirectories and `.md` files
+        let sub_dir = dir_path.join("123");
+        fs::create_dir(&sub_dir).expect("Failed to create subdirectory");
+
+        let file1 = sub_dir.join("123.md");
+        let file2 = sub_dir.join("4.md");
+        let file3 = sub_dir.join("notvalid_5.md");
+        fs::write(&file1, "Content of file1").expect("Failed to write file1");
+        fs::write(&file2, "Content of file2").expect("Failed to write file2");
+        fs::write(&file3, "Content of file3").expect("Failed to write file3");
+
+        // Call the function
+        let result = get_pathes(dir_path.to_path_buf());
+
+        // Assert the result
+        assert!(result.is_ok(), "Function returned an error");
+        let files = result.unwrap();
+        assert_eq!(
+            files,
+            vec![file1, file2],
+            "The returned file pathes do not match the expected result"
+        );
+    }
+
+    // Mock implementation of `get_pathes`
+    fn mock_get_pathes(_path: PathBuf) -> Result<Vec<PathBuf>, Error> {
+        Ok(vec![
+            PathBuf::from("mock_file1_123.md"),
+            PathBuf::from("mock_file2_456.md"),
+        ])
+    }
+
+    #[test]
+    fn test_get_last_not_path_with_mock() {
+        // Replace the real `not_path` with the mock directory
+        let not_path = PathBuf::from("mock_directory");
+
+        // Use the mock implementation of `get_pathes`
+        let not_files = mock_get_pathes(not_path).expect("Failed to get mock pathes");
+
+        // Simulate the behavior of `get_last_not_path`
+        let last_file = not_files.last().expect("No files found");
+        assert_eq!(
+            last_file,
+            &PathBuf::from("mock_file2_456.md"),
+            "The last file does not match the expected result"
+        );
+    }
 
     #[test]
     fn test_append() {

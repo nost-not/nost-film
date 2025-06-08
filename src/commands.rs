@@ -133,19 +133,23 @@ mod tests {
         let mut file = File::create(&file_path).unwrap();
         writeln!(file, "Film viewings").unwrap();
 
+        let current_time = chrono::Local::now().format("%H:%M").to_string();
+
         // Call run_append_film_viewing to append a film viewing
         let result = append_film_viewing(
             temp_dir.path().to_str().unwrap().into(),
-            "The Prestige",
+            "Memento",
             Some("invalid_time"),
         );
+        assert!(result.is_ok());
 
-        // Assert that the result is an error
-        // assert!(result.is_err());
+        let mut file_content = String::new();
+        File::open(&file_path)
+            .unwrap()
+            .read_to_string(&mut file_content)
+            .unwrap();
 
-        // Optionally, check the error message
-        // if let Err(err) = result {
-        //     assert!(err.to_string().contains("invalid time format"));
-        // }
+        // invalid time should be replaced with current time
+        assert!(file_content.contains(&format!("Memento - {}", current_time)));
     }
 }

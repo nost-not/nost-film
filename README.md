@@ -43,7 +43,6 @@ Holland - 22:36
 
 Add a viewing reference in the last existing not file.
 
-
 ```
 target/release/nost-film view <title> <optional hh:mm>
 ```

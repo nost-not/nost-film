@@ -51,7 +51,7 @@ pub fn get_last_not_path(not_path: PathBuf) -> io::Result<PathBuf> {
     }
 }
 
-pub fn append_content(file_path: PathBuf, content: &str) -> io::Result<()> {
+pub fn append(file_path: PathBuf, content: &str) -> io::Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .append(true)
@@ -60,4 +60,40 @@ pub fn append_content(file_path: PathBuf, content: &str) -> io::Result<()> {
     writeln!(file, "{}", content)?;
     println!("Content appended successfully to {}", file_path.display());
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::fs;
+    use std::io::Read;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_append() {
+        // Create a temporary file for testing
+        let temp_file = NamedTempFile::new().expect("Failed to create temporary file");
+        let test_file_path = temp_file.path().to_path_buf();
+        let initial_content = "Initial content.\n";
+        let append_content = "Appended content.";
+
+        // Write initial content to the file
+        fs::write(&test_file_path, initial_content).expect("Failed to write initial content");
+
+        // Append content using the function
+        append(test_file_path.clone(), append_content).expect("Failed to append content");
+
+        // Read the file to verify the content
+        let mut file = fs::File::open(&test_file_path).expect("Failed to open test file");
+        let mut file_content = String::new();
+        file.read_to_string(&mut file_content)
+            .expect("Failed to read test file");
+
+        // Assert the content
+        assert_eq!(
+            file_content,
+            format!("{}{}\n", initial_content, append_content),
+            "File content does not match expected content"
+        );
+    }
 }

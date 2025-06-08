@@ -1,5 +1,5 @@
 use crate::files::get_pathes;
-use crate::files::{append_content, get_last_not_path};
+use crate::files::{append, get_last_not_path};
 use chrono::Local;
 use chrono::NaiveTime;
 use std::path::PathBuf;
@@ -64,7 +64,7 @@ pub fn append_film_viewing(
         uid, checked_time, title, title, checked_time
     );
 
-    append_content(last_not_path, &content)
+    append(last_not_path, &content)
 }
 
 #[cfg(test)]
